@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Crop Disease Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 25px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            color: #a5ff95;
+            font-size: 26px;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        input[type=file] {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .camera-btn {
+            background: linear-gradient(90deg, #00C853, #B2FF59);
+        }
+
+        .detect-btn {
+            background: linear-gradient(90deg, #1976D2, #64B5F6);
+        }
+
+        .camera-btn:hover, .detect-btn:hover {
+            opacity: 0.8;
+        }
+
+        img {
+            margin-top: 20px;
+            width: 80%;
+            border-radius: 15px;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .cure-box {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #77ff77;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            color: #e5ffe7;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            text-align: left;
+        }
+
+        .error {
+            color: #ff7373;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button class="history-btn" onclick="openHistory()">H</button>
+        <h1>🌿 AI Crop Disease Detector</h1>
+
+        <form action="/predict" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="button" class="camera-btn" onclick="openCamera()">📷 Use Live Camera</button>
+            <button type="submit" class="detect-btn">🔍 Detect Disease</button>
+        </form>
+
+        {% if img_path %}
+            <img src="{{ img_path }}" alt="Uploaded Leaf">
+        {% endif %}
+
+        {% if prediction %}
+            <div class="result">
+                <strong>Detected:</strong> {{ prediction }} ({{ confidence }}%)
+            </div>
+        {% endif %}
+
+        {% if cure %}
+            <div class="cure-box">
+                🩺 <strong>Treatment Suggestion:</strong> {{ cure }}
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeHistory()">&times;</span>
+            <h2>Recent Images</h2>
+            <div class="history-gallery">
+                {% for item in history %}
+                    <div class="history-item">
+                        <img src="{{ item.img_path }}" alt="History Image">
+                        <div class="history-details">
+                            <strong>{{ item.prediction }}</strong> ({{ item.confidence }}%)<br>
+                            <small>{{ item.cure }}</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCamera() {
+            const video = document.createElement('video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const captureBtn = document.createElement('button');
+            captureBtn.textContent = 'Capture';
+            captureBtn.style.background = '#00C853';
+            captureBtn.style.color = 'white';
+            captureBtn.style.border = 'none';
+            captureBtn.style.padding = '10px 20px';
+            captureBtn.style.borderRadius = '10px';
+            captureBtn.style.cursor = 'pointer';
+
+            const container = document.querySelector('.container');
+            container.appendChild(video);
+            container.appendChild(captureBtn);
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+                })
+                .catch(err => {
+                    alert('Camera access denied or not available.');
+                });
+
+            captureBtn.onclick = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(blob => {
+                    const file = new File([blob], 'captured_image.jpg', { type: 'image/jpeg' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    document.querySelector('input[type="file"]').files = dataTransfer.files;
+                    video.remove();
+                    captureBtn.remove();
+                });
+            };
+        }
+    </script>
+</body>
+</html>

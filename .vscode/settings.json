@@ -1,0 +1,29 @@
+{
+    "python.defaultInterpreterPath": "c:/Users/rushi/Downloads/AI CROP DIEASE/venv/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "c:/Users/rushi/Downloads/AI CROP DIEASE/venv/Lib/site-packages",
+        "c:/Users/rushi/Downloads/AI CROP DIEASE",
+        "C:/Users/rushi/Downloads/AI CROP DIEASE/venv/Lib/site-packages",
+        "C:/Users/rushi/Downloads/AI CROP DIEASE/venv/Lib/site-packages/keras/_tf_keras",
+        "C:/Users/rushi/Downloads/AI CROP DIEASE/venv/Lib/site-packages/keras/_tf_keras/keras"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.includeFileSpecs": ["**/*.py"],
+    "python.analysis.exclude": ["**/node_modules", "**/__pycache__", "**/venv"],
+    "python.analysis.indexing": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "none",
+        "reportMissingTypeStubs": "none"
+    },
+    "python.analysis.packageIndexDepths": [
+        {
+            "name": "tensorflow",
+            "depth": 4
+        },
+        {
+            "name": "keras",
+            "depth": 4
+        }
+    ]
+}
