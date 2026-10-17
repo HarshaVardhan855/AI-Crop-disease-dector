@@ -36,26 +36,6 @@ Notes:
 
 ---
 
-## Flow — how the project works (visual) 🔁
-
-Mermaid flowchart (supported on GitHub when mermaid is enabled). If your renderer doesn't show mermaid, refer to the ASCII flow below.
-
-```mermaid
-flowchart TD
-  A[User uploads leaf image 📷] --> B[Flask receives file — app.py]
-  B --> C[Save image to /static]
-  C --> D[Preprocess image → resize 224x224, scale/normalize]
-  D --> E[Model.predict(img) — plant_disease_model.h5]
-  E --> F[Get class index → map to class_labels.json]
-  F --> G[Lookup cure suggestion (cure_suggestions dict)]
-  G --> H[Render templates/index.html with prediction, confidence, cure, and history ✅]
-```
-
-ASCII fallback:
-User upload -> Flask -> save in static -> preprocess (224x224, /255) -> model.predict -> map label -> fetch cure -> show result
-
----
-
 ## Tech stack & notable libs 🧰
 - Language: Python 3.x
 - Web framework: Flask (simple server + Jinja2 templates)
