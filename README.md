@@ -1,6 +1,6 @@
 # 🌿 AI Crop Disease Detector
 
-Detects plant leaf diseases from an uploaded photo using a trained convolutional neural network (MobileNetV2 transfer learning). Designed as a simple Flask web app so students and mentors can run it locally, see predictions + confidence, and get suggested cures/treatments. 🧪📸
+Detects plant leaf diseases from an uploaded photo using a trained convolutional neural network (MobileNetV2 transfer learning). Designed as a simple Flask web app so students and mentors can run it locally or on Colab for learning and demos.
 
 ---
 
@@ -42,11 +42,11 @@ Mermaid flowchart (supported on GitHub when mermaid is enabled). If your rendere
 
 ```mermaid
 flowchart TD
-  A[User uploads leaf image 📷] --> B[Flask receives file (app.py)]
+  A[User uploads leaf image 📷] --> B[Flask receives file — app.py]
   B --> C[Save image to /static]
-  C --> D[Preprocess image -> resize 224x224, scale/normalize]
-  D --> E[Model.predict(img) (plant_disease_model.h5)]
-  E --> F[Get class index -> map to class_labels.json]
+  C --> D[Preprocess image → resize 224x224, scale/normalize]
+  D --> E[Model.predict(img) — plant_disease_model.h5]
+  E --> F[Get class index → map to class_labels.json]
   F --> G[Lookup cure suggestion (cure_suggestions dict)]
   G --> H[Render templates/index.html with prediction, confidence, cure, and history ✅]
 ```
@@ -84,7 +84,7 @@ User upload -> Flask -> save in static -> preprocess (224x224, /255) -> model.pr
     └─ <images...>            # Example images and uploaded images
 ```
 
-**How it fits together:** The runtime is a single Flask process (app.py). The model file is loaded once on startup. When a user uploads a file via the index page, Flask saves it to static/, preprocesses it to match the model input (224×224, normalized), runs model.predict, maps the predicted index to a human label (class_labels.json), looks up a cure string in the built-in cure_suggestions dictionary, and returns the rendered HTML page with prediction, confidence and a short history stored in the Flask session.
+**How it fits together:** The runtime is a single Flask process (app.py). The model file is loaded once on startup. When a user uploads a file via the index page, Flask saves it to static/ and the prediction flow runs as described above.
 
 ---
 
