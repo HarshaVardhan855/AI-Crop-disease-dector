@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import load_model
 import os
 import json
+import time
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for session
@@ -66,52 +67,71 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return render_template('index.html', error="No file selected")
+    request_start = time.perf_counter()
+    app.logger.info("PREDICT: Request started")
 
-    file = request.files['file']
-    if file.filename == '':
-        return render_template('index.html', error="No image uploaded")
+    try:
+        if 'file' not in request.files:
+            app.logger.warning("PREDICT: No file in request")
+            return render_template('index.html', error="No file selected")
 
-    # Save uploaded file
-    img_path = os.path.join('static', file.filename or 'uploaded_image.jpg')
-    os.makedirs('static', exist_ok=True)
-    file.save(img_path)
+        file = request.files['file']
+        if file.filename == '':
+            app.logger.warning("PREDICT: Empty filename received")
+            return render_template('index.html', error="No image uploaded")
 
-    # Preprocess image for model (MobileNet expects 224x224)
-    img = image.load_img(img_path, target_size=(224, 224))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array /= 255.0
+        # Save uploaded file
+        img_path = os.path.join('static', file.filename or 'uploaded_image.jpg')
+        os.makedirs('static', exist_ok=True)
+        file.save(img_path)
+        app.logger.info("PREDICT: Image saved to %s", img_path)
 
-    # Predict
-    predictions = model.predict(img_array)
-    class_index = int(np.argmax(predictions))
-    prediction = class_names[class_index]
-    confidence = round(np.max(predictions) * 100, 2)
+        preprocess_start = time.perf_counter()
+        img = image.load_img(img_path, target_size=(224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array /= 255.0
+        preprocess_duration = time.perf_counter() - preprocess_start
+        app.logger.info("PREDICT: Preprocessing completed in %.3f seconds", preprocess_duration)
 
-    # Get cure suggestion
-    cure = cure_suggestions.get(prediction, "Cure information not available.")
+        app.logger.info("PREDICT: Model inference started")
+        inference_start = time.perf_counter()
+        predictions = model.predict(img_array, verbose=0)
+        inference_duration = time.perf_counter() - inference_start
+        app.logger.info("PREDICT: Model inference completed in %.3f seconds", inference_duration)
 
-    # Add to history (keep last 3)
-    history = session.get('image_history', [])
-    history_entry = {
-        'img_path': img_path,
-        'prediction': prediction,
-        'confidence': confidence,
-        'cure': cure
-    }
-    history.append(history_entry)
-    if len(history) > 3:
-        history.pop(0)
-    session['image_history'] = history
+        class_index = int(np.argmax(predictions))
+        prediction = class_names[class_index]
+        confidence = round(np.max(predictions) * 100, 2)
 
-    return render_template('index.html',
-                           prediction=prediction,
-                           confidence=confidence,
-                           cure=cure,
-                           img_path=img_path,
-                           history=history)
+        # Get cure suggestion
+        cure = cure_suggestions.get(prediction, "Cure information not available.")
+
+        # Add to history (keep last 3)
+        history = session.get('image_history', [])
+        history_entry = {
+            'img_path': img_path,
+            'prediction': prediction,
+            'confidence': confidence,
+            'cure': cure
+        }
+        history.append(history_entry)
+        if len(history) > 3:
+            history.pop(0)
+        session['image_history'] = history
+
+        total_duration = time.perf_counter() - request_start
+        app.logger.info("PREDICT: Request completed in %.3f seconds", total_duration)
+
+        return render_template('index.html',
+                               prediction=prediction,
+                               confidence=confidence,
+                               cure=cure,
+                               img_path=img_path,
+                               history=history)
+    except Exception:
+        app.logger.exception("PREDICT: Prediction request failed")
+        return render_template('index.html', error="Prediction failed. Please try again with a different image.")
 
 
 if __name__ == '__main__':
