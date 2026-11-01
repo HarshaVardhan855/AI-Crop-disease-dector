@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, session
 import numpy as np
 import tensorflow as tf
@@ -12,7 +13,7 @@ tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'  # Required for session
+app.secret_key = 'your_secret_key_here'
 
 # Load your trained model
 model = load_model("plant_disease_model.h5")
@@ -21,7 +22,7 @@ model = load_model("plant_disease_model.h5")
 with open('class_labels.json', 'r') as f:
     class_names = json.load(f)
 
-# Cure or treatment info (expanded for all classes)
+# Cure or treatment info for all classes
 cure_suggestions = {
     "Apple___Apple_scab": "Use fungicides like Captan or Mancozeb. Remove infected leaves and prune the tree regularly.",
     "Apple___Black_rot": "Remove infected fruits and leaves. Apply copper-based fungicide. Keep area dry.",
@@ -78,16 +79,25 @@ def predict():
     try:
         if 'file' not in request.files:
             app.logger.warning("PREDICT: No file in request")
-            return render_template('index.html', error="No file selected")
+            return render_template(
+                'index.html',
+                error="No file selected"
+            )
 
         file = request.files['file']
 
         if file.filename == '':
             app.logger.warning("PREDICT: Empty filename received")
-            return render_template('index.html', error="No image uploaded")
+            return render_template(
+                'index.html',
+                error="No image uploaded"
+            )
 
         # Save uploaded image
-        img_path = os.path.join('static', file.filename or 'uploaded_image.jpg')
+        img_path = os.path.join(
+            'static',
+            file.filename or 'uploaded_image.jpg'
+        )
         os.makedirs('static', exist_ok=True)
         file.save(img_path)
 
@@ -96,7 +106,10 @@ def predict():
         # Preprocess image for model
         preprocess_start = time.perf_counter()
 
-        img = image.load_img(img_path, target_size=(224, 224))
+        img = image.load_img(
+            img_path,
+            target_size=(224, 224)
+        )
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         img_array /= 255.0
@@ -113,6 +126,7 @@ def predict():
 
         inference_start = time.perf_counter()
         predictions = model.predict(img_array, verbose=0)
+
         inference_duration = time.perf_counter() - inference_start
 
         app.logger.info(
@@ -123,7 +137,10 @@ def predict():
         # Get prediction
         class_index = int(np.argmax(predictions))
         prediction = class_names[class_index]
-        confidence = round(float(np.max(predictions)) * 100, 2)
+        confidence = round(
+            float(np.max(predictions)) * 100,
+            2
+        )
 
         # Get cure suggestion
         cure = cure_suggestions.get(
@@ -165,7 +182,9 @@ def predict():
         )
 
     except Exception:
-        app.logger.exception("PREDICT: Prediction request failed")
+        app.logger.exception(
+            "PREDICT: Prediction request failed"
+        )
 
         return render_template(
             'index.html',
