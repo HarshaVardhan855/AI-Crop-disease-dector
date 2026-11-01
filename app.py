@@ -1,11 +1,15 @@
-
 from flask import Flask, render_template, request, session
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import load_model
 import os
 import json
 import time
+
+# Limit TensorFlow CPU threads for Render's limited resources
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for session
